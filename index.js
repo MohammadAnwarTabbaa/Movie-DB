@@ -22,6 +22,9 @@ app.get("/time", (req, res) => {
 app.get("/hello/:id", (req, res) => {
   res.status(200).send({ status: 200, message: "hello " + req.params.id });
 });
+app.get("/hello/", (req, res) => {
+  res.status(200).send({ status: 200, message: "Hello! " });
+});
 app.get("/search", (req, res) => {
   const search = req.query.s;
   if (search) {
@@ -67,6 +70,27 @@ app.get("/movies/get/by-title", (req, res) => {
   });
 
   res.status(200).send({ status: 200, data: movies });
+});
+app.get("/movies/get/id/:id", (req, res) => {
+  var i;
+  let arr = [];
+  id = req.params.id;
+  for (i = 0; i < movies.length; i++) {
+    if (id == i + 1) {
+      arr = movies[i];
+    }
+  }
+  if (arr.length == 0) {
+    res.status(404).send({
+      status: 404,
+      error: true,
+      message: "the movie " + id + " does not exist",
+    });
+    arr = [];
+  } else {
+    res.status(200).send({ status: 200, data: arr });
+    arr = [];
+  }
 });
 
 app.listen(port, () => {
