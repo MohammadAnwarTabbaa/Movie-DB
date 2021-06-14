@@ -71,6 +71,8 @@ app.get("/movies/get/by-title", (req, res) => {
 
   res.status(200).send({ status: 200, data: movies });
 });
+
+//i used all this code beause i think that i want to get the movie by name but it is works
 app.get("/movies/get/id/:id", (req, res) => {
   var i;
   let arr = [];
@@ -91,6 +93,30 @@ app.get("/movies/get/id/:id", (req, res) => {
     res.status(200).send({ status: 200, data: arr });
     arr = [];
   }
+});
+
+app.get("/movies/add", (req, res) => {
+  const title = req.query.title;
+  const year = req.query.year;
+  const rating = req.query.rating;
+  const rate = "4";
+  if (title && year && year.length == 4 && Number.isInteger(parseInt(year))) {
+    if (!rating) {
+      movies.push({ title: title, year: Number.parseInt(year), rating: 4 });
+    } else {
+      movies.push({
+        title: title,
+        year: Number.parseInt(year),
+        rating: Number.parseFloat(rating),
+      });
+    }
+    res.status(200).send({ status: 200, data: movies });
+  } else
+    res.status(403).send({
+      status: 403,
+      error: true,
+      message: "You cannot create a movie without providing a title and a year",
+    });
 });
 
 app.listen(port, () => {
