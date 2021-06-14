@@ -138,6 +138,35 @@ app.get("/movies/delete/", (req, res) => {
   res.status(404).send({ status: 404, message: "you should put an id" });
 });
 
+app.get("/movies/update/:id", (req, res) => {
+  id = req.params.id;
+  arr = [];
+  if (
+    Number.isInteger(parseInt(req.query.year)) &&
+    req.query.year.length == 4
+  ) {
+    if (req.query.title) {
+      arr.push({ title: req.query.title });
+    }
+    if (req.query.rating) {
+      arr.push({ rating: Number.parseFloat(req.query.rating) });
+    }
+    if (req.query.year) {
+      arr.push({ year: Number.parseInt(req.query.year) });
+    }
+    for (var i = 0; i < arr.length; i++) {
+      movies[id - 1][Object.keys(arr[i])] = arr[i][Object.keys(arr[i])];
+      // console.log(Object.keys(arr[i]));
+      // console.log(arr[i]);
+    }
+    res.status(200).send({ status: 200, data: movies });
+  }
+  //to check if year is 4 digit and it is a number
+  else {
+    res.status(404).send({ message: "error" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
