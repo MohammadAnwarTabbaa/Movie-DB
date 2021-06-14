@@ -38,6 +38,37 @@ app.get("/movies/get", (req, res) => {
   res.status(200).send({ status: 200, data: movies });
 });
 
+app.get("/movies/get/by-date", (req, res) => {
+  movies.sort(function (a, b) {
+    return a.year - b.year;
+  });
+
+  res.status(200).send({ status: 200, data: movies });
+});
+
+app.get("/movies/get/by-rating", (req, res) => {
+  movies.sort(function (a, b) {
+    return a.rating - b.rating;
+  });
+
+  res.status(200).send({ status: 200, data: movies });
+});
+
+app.get("/movies/get/by-title", (req, res) => {
+  movies.sort(function (a, b) {
+    if (a.title < b.title) {
+      return -1;
+    }
+    if (a.title > b.title) {
+      return 1;
+    }
+
+    return 0;
+  });
+
+  res.status(200).send({ status: 200, data: movies });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
