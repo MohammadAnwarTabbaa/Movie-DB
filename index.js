@@ -9,8 +9,8 @@ const movies = [
   { title: "Brazil", year: 1985, rating: 8 },
   { title: "الإرهاب والكباب‎", year: 1992, rating: 6.2 },
 ];
-
-app.get("/", (req, res) => {
+app.use(express.json());
+app.post("/", (req, res) => {
   res.send("ok");
 });
 app.get("/test", (req, res) => {
@@ -38,7 +38,7 @@ app.get("/search", (req, res) => {
   }
 });
 app.get("/movies/get", (req, res) => {
-  res.status(200).send({ status: 200, data: movies });
+  res.status(200).send({ status: 200, data: movie[0] });
 });
 
 app.get("/movies/get/by-date", (req, res) => {
@@ -95,7 +95,7 @@ app.get("/movies/get/id/:id", (req, res) => {
   }
 });
 
-app.get("/movies/add", (req, res) => {
+app.post("/movies/add", (req, res) => {
   const title = req.query.title;
   const year = req.query.year;
   const rating = req.query.rating;
@@ -118,7 +118,7 @@ app.get("/movies/add", (req, res) => {
       message: "You cannot create a movie without providing a title and a year",
     });
 });
-app.get("/movies/delete/:id", (req, res) => {
+app.delete("/movies/delete/:id", (req, res) => {
   id = req.params.id;
   if (id == 1) {
     movies.shift();
@@ -134,11 +134,11 @@ app.get("/movies/delete/:id", (req, res) => {
     });
   }
 });
-app.get("/movies/delete/", (req, res) => {
+app.delete("/movies/delete/", (req, res) => {
   res.status(404).send({ status: 404, message: "you should put an id" });
 });
 
-app.get("/movies/update/:id", (req, res) => {
+app.put("/movies/update/:id", (req, res) => {
   id = req.params.id;
   arr = [];
   if (
