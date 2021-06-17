@@ -1,4 +1,7 @@
+const { json } = require("body-parser");
 const express = require("express");
+const jwt = require("jsonwebtoken");
+
 const app = express();
 const mongoose = require("mongoose");
 const port = 3000;
@@ -9,8 +12,24 @@ app.use(express.json());
 
 app.use("/movies", moviesRoute);
 
+app.post("/login", (req, res) => {
+  const user = {
+    usename: "anwar",
+    password: "anwar123",
+  };
+  jwt.sign({ user }, "secretKey", (err, token) => {
+    res.json({ token });
+  });
+});
+
 app.post("/anwar", (req, res) => {
-  res.send("ok");
+  jwt.verify(req.token, "secretKey", (err, authData) => {
+    if (err) {
+      res.json("you don't have Permission ");
+    } else {
+      res.send("ok");
+    }
+  });
 });
 
 app.get("/", (req, res) => {

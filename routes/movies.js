@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
+const jwt = require("jsonwebtoken");
 
 router.get("/get", async (req, res) => {
   try {
@@ -39,32 +40,41 @@ router.get("/get/by-title", async (req, res) => {
   }
 });
 
-router.post("/add", (req, res) => {
-  const post = new Post({
-    title: req.body.title,
-    year: req.body.year,
-    rating: req.body.rating,
-  });
-  if (
-    req.body.title &&
-    req.body.year &&
-    req.body.year.toString().length == 4 &&
-    Number.isInteger(parseInt(req.body.year))
-  ) {
-    post
-      .save()
-      .then((data) => {
-        res.json(data);
-      })
-      .catch((err) => {
-        res.json({ message: err });
+//you should login and take the token and put it inside headers   key=Authorization  Value= Bearer "the token wich you take "
+
+router.post("/add", verifyToken, (req, res) => {
+  jwt.verify(req.token, "secretKey", (err, authData) => {
+    if (err) {
+      res.json("you don't have Permission ");
+    } else {
+      const post = new Post({
+        title: req.body.title,
+        year: req.body.year,
+        rating: req.body.rating,
       });
-  } else
-    res.status(403).json({
-      status: 403,
-      error: true,
-      message: "You cannot create a movie without providing a title and a year",
-    });
+      if (
+        req.body.title &&
+        req.body.year &&
+        req.body.year.toString().length == 4 &&
+        Number.isInteger(parseInt(req.body.year))
+      ) {
+        post
+          .save()
+          .then((data) => {
+            res.json(data);
+          })
+          .catch((err) => {
+            res.json({ message: err });
+          });
+      } else
+        res.status(403).json({
+          status: 403,
+          error: true,
+          message:
+            "You cannot create a movie without providing a title and a year",
+        });
+    }
+  });
 });
 
 router.get("/get/id", async (req, res) => {
@@ -83,70 +93,103 @@ router.get("/get/id", async (req, res) => {
   }
 });
 
-router.delete("/delete", async (req, res) => {
-  id = req.body.id;
-  const item = await Post.findById(id);
-  if (item) {
-    try {
-      await Post.remove({ _id: id });
-      const result = await Post.find();
-      res.status(200).json({ status: 200, data: result });
-    } catch (err) {
-      res.json(err);
+//you should login and take the token and put it inside headers   key=Authorization  Value= Bearer "the token wich you take "
+
+router.delete("/delete", verifyToken, async (req, res) => {
+  jwt.verify(req.token, "secretKey", async (err, authData) => {
+    if (err) {
+      res.json("you don't have Permission ");
+    } else {
+      id = req.body.id;
+      const item = await Post.findById(id);
+      if (item) {
+        try {
+          await Post.remove({ _id: id });
+          const result = await Post.find();
+          res.status(200).json({ status: 200, data: result });
+        } catch (err) {
+          res.json(err);
+        }
+      } else {
+        res.status(404).json({
+          status: 404,
+          error: true,
+          message: "the movie " + id + " does not exist",
+        });
+      }
     }
+  });
+});
+
+//you should login and take the token and put it inside headers   key=Authorization  Value= Bearer "the token wich you take "
+router.put("/update/:id", verifyToken, async (req, res) => {
+  jwt.verify(req.token, "secretKey", async (err, authData) => {
+    if (err) {
+      res.json("you don't have Permission ");
+    } else {
+      id = req.params.id;
+
+      // arr = [];
+      if (
+        Number.isInteger(parseInt(req.body.year)) &&
+        req.body.year.toString().length == 4
+      ) {
+        try {
+          if (req.body.title) {
+            await Post.updateOne(
+              { _id: id },
+              { $set: { title: req.body.title } }
+            );
+          }
+          if (req.body.rating) {
+            await Post.updateOne(
+              { _id: id },
+              { $set: { rating: req.body.rating } }
+            );
+          }
+          if (req.body.year) {
+            await Post.updateOne(
+              { _id: id },
+              { $set: { year: req.body.year } }
+            );
+          }
+          // I I TRIED TO SOLVE IT IN THIS WAY BUT I DON'T KNOW WHY IT IS NOT WORKS !
+
+          // for (var i = 0; i < arr.length; i++) {
+          //   let kye = Object.keys(arr[i])[0];
+          //   console.log(kye);
+          //   console.log(arr[i][Object.keys(arr[i])]);
+          //   // await Post.updateOne(
+          //   { _id: id },
+          //   { $set: { kye: arr[i][Object.keys(arr[i])] } }
+          // );
+          // movies[id - 1][Object.keys(arr[i])] = arr[i][Object.keys(arr[i])];
+          // console.log(Object.keys(arr[i]));
+          // console.log(arr[i]);
+          // }
+          res.status(200).send({ status: 200, data: await Post.find() });
+        } catch (err) {
+          console.log(err);
+        }
+      }
+
+      //to check if year is 4 digit and it is a number
+      else {
+        res.status(404).send({ message: "error" });
+      }
+    }
+  });
+});
+
+function verifyToken(req, res, next) {
+  const bearerHeader = req.headers["authorization"];
+  if (typeof bearerHeader !== "undefined") {
+    const bearer = bearerHeader.split(" ");
+    const bearerToken = bearer[1];
+    req.token = bearerToken;
+    next();
   } else {
-    res.status(404).json({
-      status: 404,
-      error: true,
-      message: "the movie " + id + " does not exist",
-    });
+    res.json("you don't have Permission");
   }
-});
-
-router.put("/update/:id", async (req, res) => {
-  id = req.params.id;
-
-  // arr = [];
-  if (
-    Number.isInteger(parseInt(req.body.year)) &&
-    req.body.year.toString().length == 4
-  ) {
-    try {
-      if (req.body.title) {
-        await Post.updateOne({ _id: id }, { $set: { title: req.body.title } });
-      }
-      if (req.body.rating) {
-        await Post.updateOne(
-          { _id: id },
-          { $set: { rating: req.body.rating } }
-        );
-      }
-      if (req.body.year) {
-        await Post.updateOne({ _id: id }, { $set: { year: req.body.year } });
-      }
-      // I I TRIED TO SOLVE IT IN THIS WAY BUT I DON'T KNOW WHY IT IS NOT WORKS !
-
-      // for (var i = 0; i < arr.length; i++) {
-      //   let kye = Object.keys(arr[i])[0];
-      //   console.log(kye);
-      //   console.log(arr[i][Object.keys(arr[i])]);
-      //   // await Post.updateOne(
-      //   { _id: id },
-      //   { $set: { kye: arr[i][Object.keys(arr[i])] } }
-      // );
-      // movies[id - 1][Object.keys(arr[i])] = arr[i][Object.keys(arr[i])];
-      // console.log(Object.keys(arr[i]));
-      // console.log(arr[i]);
-      // }
-      res.status(200).send({ status: 200, data: await Post.find() });
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  //to check if year is 4 digit and it is a number
-  else {
-    res.status(404).send({ message: "error" });
-  }
-});
+}
 module.exports = router;
